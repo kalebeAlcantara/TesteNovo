@@ -1,0 +1,190 @@
+﻿@model Application.Web.Models.RelatorioViewModel;
+
+@{
+	ViewData["Title"] = "Relatorio";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Relatorio</h1>
+
+@section Formulario {
+	<form class="form" method="post" defaultbutton="btnGerar">
+		<div class="row">
+		</div>
+		<div class="row pb-3">
+			@Html.HiddenFor(model => model.Id)
+			<div class="col-md-2">
+				@Html.Label("txt_CNPJ", "De", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.DataDe, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.DataDe, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-3">
+				@Html.Label("txt_2", "Ate", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.DataAte, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.DataAte, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-3">
+				@Html.Label("txt_TipoMovimentacao", "Tipo", new { @class = "form-check-label" })
+				<select asp-for="TipoMovimentacao" class="form-control" required="false">
+					<option value="0">Todos</option>
+					<option value="1">Entrada</option>
+					<option value="2">Saida</option>
+				</select>
+				@Html.ValidationMessageFor(model => model.TipoMovimentacao, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-5">
+				@Html.HiddenFor(d => d.FornecedorId)
+				@Html.Label("txt_3", "Fornecedor", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.FornecedorNome, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.FornecedorNome, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-5">
+				@Html.HiddenFor(d => d.MaterialId)
+				@Html.Label("txt_5", "Material", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.MaterialNome, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.MaterialNome, "", new { @class = "text-danger" })
+			</div>
+		</div>
+		<div class="row pb-3 float-right">
+			<div class="col-md-10">
+				<button type="submit" id="btnGerar" class="btn btn-primary float-end" asp-action="Index" disabled="disabled"><i class="fa fa-floppy-o"></i> Gerar</button>
+			</div>
+		</div>
+	</form>
+}
+
+@section Listagem {
+	<div>
+		<h3>Relatório de Movimentacao de estoque</h3>
+	</div>
+	<p>Periodo<span></span></p>
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th scope="col" rowspan="2">Material/Data</th>
+				<th scope="col" colspan="2">Entradas</th>
+				<th scope="col" colspan="2">Saidas</th>
+				<th scope="col" colspan="2">Saldo</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td></td>
+				<td>Quant</td>
+				<td>Valor</td>
+				<td>Quant</td>
+				<td>Valor</td>
+				<td>Quant</td>
+				<td>Valor</td>
+			</tr>
+			@{
+				if (Model.Relatorio != null)
+					foreach (var rel in Model.Relatorio)
+					{
+						<tr>
+							<td><b> @rel.MaterialCodigo</b></td>
+							<td><b>@rel.QtdTotalEntrada</b></td>
+							<td><b>@rel.ValorTotalEntrada</b></td>
+							<td><b>@rel.QtdTotalSaida</b></td>
+							<td><b>@rel.ValorTotalSaida</b></td>
+							<td><b>@rel.QtdTotaldSaldo</b></td>
+							<td><b>@rel.ValorTotalSaldo</b></td>
+						</tr>
+						foreach (var item in rel.MovimentacoesMaterial)
+						{
+							<tr>
+								<td>@item.Data.ToShortDateString()</td>
+								<td>@item.QtdEntrada</td>
+								<td>@item.ValorEntrada</td>
+								<td>@item.QtdSaida</td>
+								<td>@item.ValorSaida</td>
+								<td>@item.QtdSaldo</td>
+								<td>@item.ValorSaldo</td>
+							</tr>
+						}
+					}
+			}
+		</tbody>
+	</table>
+}
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	<script>
+		var t = "";
+		$(document).on('change', 'form', function (e) {
+
+			if ($("#DataDe").val() != "" &&
+				$("#DataAte").val() != "" &&
+				$("#FornecedorNome").val() != "")
+				$("button[type='submit']")[0].disabled = "";
+			else
+				$("button[type='submit']")[0].disabled = "disabled";
+		});
+	</script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script>
+		$("#FornecedorNome").autocomplete({
+			source: function (request, response) {
+				$.ajax({
+					url: "/Fornecedor/Listar",
+					type: "POST",
+					dataType: "json",
+					data: { Prefix: request.term },
+					success: function (data) {
+						response($.map(data, function (item) {
+							return { label: item.nome, value: item.nome, id: item.id };
+						}));
+					},
+					error: function (response) {
+						console.log(response.responseText);
+					},
+					failure: function (response) {
+						console.log(response.responseText);
+					}
+				})
+			},
+			select: function (e, i) {
+				$("#FornecedorId").val(i.item.id);
+				$("#FornecedorNome").val(i.item.nome);
+			},
+			change: function (event, ui) {
+				if (ui.item === null)
+					$("#FornecedorId").val("");
+			},
+		});
+
+		$("#MaterialNome").autocomplete({
+			source: function (request, response) {
+				$.ajax({
+					url: "/Material/Listar",
+					type: "POST",
+					dataType: "json",
+					data: { Prefix: request.term },
+					success: function (data) {
+						response($.map(data, function (item) {
+							return { label: item.nome, value: item.nome, id: item.id };
+						}));
+					},
+					error: function (response) {
+						console.log(response.responseText);
+					},
+					failure: function (response) {
+						console.log(response.responseText);
+					}
+				})
+			},
+			select: function (e, i) {
+				$("#MaterialId").val(i.item.id);
+				$("#MaterialNome").val(i.item.nome);
+			},
+			change: function (event, ui) {
+				if (ui.item === null)
+					$("#MaterialId").val("");
+			},
+		});
+	</script>
+}

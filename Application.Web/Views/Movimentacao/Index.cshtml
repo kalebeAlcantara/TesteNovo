@@ -1,0 +1,196 @@
+﻿@model Application.Web.Models.MovimentacaoViewModel;
+
+@{
+	ViewData["Title"] = "Movimentacao";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Cadastro de Movimentações</h1>
+
+@section Formulario {
+	<form class="form" method="post" defaultbutton="btnSalvar">
+		
+		<div class="row">
+		</div>
+		<div class="row pb-3">
+			@Html.HiddenFor(model => model.Id)
+			<div class="col-md-2">
+				@Html.Label("txt_Data", "Data", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.Data, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.Data, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-4">
+				@Html.Label("txt_Fornecedor", "Fornecedor", new { @class = "form-check-label" })
+				@Html.HiddenFor(model => model.FornecedorId)
+				@Html.EditorFor(model => model.FornecedorNome, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.FornecedorNome, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-5">
+				@Html.Label("txt_material", "Material", new { @class = "form-check-label" })
+				@Html.HiddenFor(model => model.MaterialId)
+				@Html.EditorFor(model => model.MaterialNome, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.MaterialNome, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-2">
+				@Html.Label("txt_Quantidade", "Quantidade", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.Quantidade, new { htmlAttributes = new { @class = "form-control", data_val = false } })
+				@Html.ValidationMessageFor(model => model.Quantidade, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-2">
+				@Html.Label("txt_valor", "Valor", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.ValorUnitario, new { htmlAttributes = new { @class = "form-control", data_val = false } })
+				@Html.ValidationMessageFor(model => model.ValorUnitario, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-2">
+				@Html.Label("txt_valorTotal", "Valor Total", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.ValorTotal, new { htmlAttributes = new { @class = "form-control", data_val = false } })
+				@Html.ValidationMessageFor(model => model.ValorTotal, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-2">
+				@Html.Label("txt_tipo", "Tipo", new { @class = "form-check-label" })
+				<select asp-for="Tipo" class="form-control" asp-items="@((List<SelectListItem>)ViewData["Tipos"])">
+				</select>
+				@Html.ValidationMessageFor(model => model.Tipo, "", new { @class = "text-danger" })
+			</div>
+		</div>
+		<div class="row pb-3 float-right">
+			<div class="col-md-10">
+				<button type="submit" id="btnSalvar" class="btn btn-primary float-end" asp-action="Edit" disabled="disabled"><i class="fa fa-floppy-o"></i> Salvar</button>
+			</div>
+		</div>
+	</form>
+}
+
+@section Listagem {
+	<table class="table  table-hover">
+		<thead>
+			<tr>
+				<th scope="col">Data</th>
+				<th scope="col">Fornecedor</th>
+				<th scope="col">Material</th>
+				<th scope="col">Quantidade</th>
+				<th scope="col">Valor Unitario</th>
+				<th scope="col">Valor Total</th>
+				<th scope="col">Tipo Operação</th>
+				<th scope="col">Ação</th>
+			</tr>
+		</thead>
+		<tbody>
+			@{
+				var linha = 0;
+				if (Model.Cadastrados != null)
+					foreach (var item in Model.Cadastrados)
+					{
+						linha++;
+						if (linha <= ViewBag.QuantMaxLinhasPorPagina)
+						{
+							<tr data-id="@item.Id">
+								<td>@item.Data</td>
+								<td>@item.Fornecedor?.RazaoSocial</td>
+								<td>@item.Material?.Codigo</td>
+								<td>@item.Quantidade</td>
+								<td>@item.ValorUnitario</td>
+								<td>@item.ValorTotal</td>
+								<td>
+									<a class="btn btn-primary btn-alterar" role="button" data-id="@item.Id" href="../Movimentacao/@item.Id"><i class="fa fa-pencil"></i> </a>
+									<a class="btn btn-danger btn-excluir" role="button" onclick="return confirm('Confirma a exclusão?')"
+									   data-id="@item.Id" href="../Movimentacao/Delete/@item.Id"><i class="fa fa-trash-o"></i> </a>
+								</td>
+							</tr>
+						}
+						else
+						{
+							break;
+						}
+					}
+			}
+		</tbody>
+	</table>
+}
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	<script>
+		$(document)
+			.on('change', 'form', function () {
+				var valido = true;
+
+
+				if (valido)
+					$("button[type='submit']")[0].disabled = "";
+				else
+					$("button[type='submit']")[0].disabled = "disabled";
+			});
+	</script>
+
+
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+	<script>
+		$(document).ready(function () {
+
+			$("#FornecedorNome").autocomplete({
+				source: function (request, response) {
+					$.ajax({
+						url: "/Fornecedor/Listar",
+						type: "POST",
+						dataType: "json",
+						data: { Prefix: request.term },
+						success: function (data) {
+							response($.map(data, function (item) {
+								return { label: item.nome, value: item.nome, id: item.id };
+							}));
+						},
+						error: function (response) {
+							console.log(response.responseText);
+						},
+						failure: function (response) {
+							console.log(response.responseText);
+						}
+					})
+				},
+				select: function (e, i) {
+					$("#FornecedorId").val(i.item.id);
+					$("#FornecedorNome").val(i.item.nome);
+				},
+				change: function (event, ui) {
+					if (ui.item === null)
+						$("#FornecedorId").val("");
+				},
+			});
+
+			$("#MaterialNome").autocomplete({
+				source: function (request, response) {
+					$.ajax({
+						url: "/Material/Listar",
+						type: "POST",
+						dataType: "json",
+						data: { Prefix: request.term },
+						success: function (data) {
+							response($.map(data, function (item) {
+								return { label: item.nome, value: item.nome, id: item.id };
+							}));
+						},
+						error: function (response) {
+							console.log(response.responseText);
+						},
+						failure: function (response) {
+							console.log(response.responseText);
+						}
+					})
+				},
+				select: function (e, i) {
+					$("#MaterialId").val(i.item.id);
+					$("#MaterialNome").val(i.item.nome);
+				},
+				change: function (event, ui) {
+					if (ui.item === null)
+						$("#MaterialId").val("");
+				},
+			});
+		})
+	</script>
+}

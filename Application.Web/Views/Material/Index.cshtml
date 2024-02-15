@@ -1,0 +1,96 @@
+﻿@model Application.Web.Models.MaterialViewModel;
+
+@{
+	ViewData["Title"] = "Material";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Cadastro de Materiais</h1>
+
+@section Formulario {
+	<form class="form" method="post" defaultbutton="btnSalvar">
+		<div class="row">
+		</div>
+		<div class="row pb-3">
+			@Html.HiddenFor(model => model.Id)
+			<div class="col-md-2">
+				@Html.Label("txt_Codigo", "Codigo", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.Codigo, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.Codigo, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-4">
+				@Html.Label("txt_Nome", "Nome", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.Nome, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.Nome, "", new { @class = "text-danger" })
+			</div>
+			<div class="col-md-4">
+				@Html.Label("txt_Medida", "Unid. Medida", new { @class = "form-check-label" })
+				@Html.EditorFor(model => model.UnidadeMedida, new { htmlAttributes = new { @class = "form-control" } })
+				@Html.ValidationMessageFor(model => model.UnidadeMedida, "", new { @class = "text-danger" })
+			</div>
+		</div>
+		<div class="row pb-3 float-right">
+			<div class="col-md-10">
+				<button type="submit" id="btnSalvar" class="btn btn-primary float-end" asp-action="Edit" disabled="disabled"><i class="fa fa-floppy-o"></i> Salvar</button>
+			</div>
+		</div>
+	</form>
+}
+
+@section Listagem {
+	<table class="table  table-hover">
+		<thead>
+			<tr>
+				<th scope="col">Codigo</th>
+				<th scope="col">Nome</th>
+				<th scope="col">Unid. Medida</th>
+				<th scope="col">Ação</th>
+			</tr>
+		</thead>
+		<tbody>
+			@{
+				var linha = 0;
+				if (Model.Cadastrados != null)
+					foreach (var item in Model.Cadastrados)
+					{
+						linha++;
+						if (linha <= ViewBag.QuantMaxLinhasPorPagina)
+						{
+							<tr data-id="@item.Id">
+								<td>@item.Codigo</td>
+								<td>@item.Nome</td>
+								<td>@item.UnidadeMedida</td>
+								<td>
+									<a class="btn btn-primary btn-alterar" role="button" data-id="@item.Id" href="../Material/@item.Id"><i class="fa fa-pencil"></i> </a>
+									<a class="btn btn-danger btn-excluir" role="button" onclick="return confirm('Confirma a exclusão?')"
+									   data-id="@item.Id" href="../Material/Delete/@item.Id"><i class="fa fa-trash-o"></i> </a>
+								</td>
+							</tr>
+						}
+						else
+						{
+							break;
+						}
+					}
+			}
+		</tbody>
+	</table>
+}
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script>
+		$(document)
+			.on('change', 'form', function () {
+				console.log("chewnge");
+				if ($("form").valid())
+					$("button[type='submit']")[0].disabled = "";
+				else
+					$("button[type='submit']")[0].disabled = "disabled";
+
+			});
+	</script>
+}
+
